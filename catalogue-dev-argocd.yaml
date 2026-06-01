@@ -1,0 +1,82 @@
+# Argo CD Application Manifest
+
+# API version for Argo CD Application resource
+apiVersion: argoproj.io/v1alpha1
+
+# Kubernetes resource type
+kind: Application
+
+metadata:
+
+  # Application name inside Argo CD
+  name: catalogue
+
+  # Namespace where Argo CD is installed
+  # Application resource must exist here
+  namespace: argocd
+
+spec:
+
+  # Argo CD project name
+  # default project allows basic deployments
+  project: default
+
+  # --------------------------------------------------------
+  # SOURCE CONFIGURATION
+  # --------------------------------------------------------
+
+  source:
+
+    # Git repository URL
+    # Argo CD continuously monitors this repository
+    repoURL: https://github.com/daws-86s/catalogue-deploy.git
+
+    # Git branch, tag, or commit
+    # Argo CD syncs manifests from this revision
+    targetRevision: main
+
+    # Path inside repository
+    # "." means repository root directory
+    path: .
+
+    # --------------------------------------------------------
+    # HELM CONFIGURATION
+    # --------------------------------------------------------
+
+    helm:
+
+      # Helm release name
+      releaseName: catalogue
+
+      # Helm values file
+      # Used for environment-specific configuration
+      valueFiles:
+        - values-dev.yaml
+
+  # --------------------------------------------------------
+  # DESTINATION CONFIGURATION
+  # --------------------------------------------------------
+
+  destination:
+
+    # Kubernetes cluster API server
+    # kubernetes.default.svc = current cluster
+    server: https://kubernetes.default.svc
+
+    # Namespace where application will be deployed
+    namespace: argocd
+
+  # --------------------------------------------------------
+  # SYNC POLICY
+  # --------------------------------------------------------
+
+  syncPolicy:
+
+    # Enable automatic synchronization
+    automated:
+
+      # Automatically delete removed resources
+      prune: true
+
+      # Automatically restore drifted resources
+      selfHeal: true
