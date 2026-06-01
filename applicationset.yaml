@@ -1,0 +1,139 @@
+# ApplicationSet Manifest
+
+# --------------------------------------------------------
+# API VERSION
+# --------------------------------------------------------
+
+# API group and version for Argo CD ApplicationSet
+apiVersion: argoproj.io/v1alpha1
+
+# --------------------------------------------------------
+# RESOURCE TYPE
+# --------------------------------------------------------
+
+# ApplicationSet resource
+kind: ApplicationSet
+
+metadata:
+
+  # ApplicationSet name
+  name: catalogue
+
+  # Namespace where Argo CD is installed
+  namespace: argocd
+
+spec:
+
+  # --------------------------------------------------------
+  # GENERATORS
+  # --------------------------------------------------------
+
+  generators:
+
+    # List generator
+    - list:
+
+        # List of environments
+        elements:
+
+          # --------------------------------------------------------
+          # DEV ENVIRONMENT
+          # --------------------------------------------------------
+
+          - env: dev
+
+            # Target Kubernetes namespace
+            namespace: argocd
+
+            # Kubernetes cluster API server
+            server: https://kubernetes.default.svc
+
+          # --------------------------------------------------------
+          # QA ENVIRONMENT
+          # --------------------------------------------------------
+
+          - env: qa
+
+            namespace: argocd
+
+            server: https://kubernetes.default.svc
+
+          # --------------------------------------------------------
+          # PROD ENVIRONMENT
+          # --------------------------------------------------------
+
+          - env: prod
+
+            namespace: argocd
+
+            server: https://kubernetes.default.svc
+
+  # --------------------------------------------------------
+  # APPLICATION TEMPLATE
+  # --------------------------------------------------------
+
+  template:
+
+    metadata:
+
+      # Dynamic application name
+      name: catalogue-{{env}}
+
+    spec:
+
+      # Argo CD project
+      project: default
+
+      # --------------------------------------------------------
+      # SOURCE CONFIGURATION
+      # --------------------------------------------------------
+
+      source:
+
+        # Git repository containing manifests/Helm chart
+        repoURL: https://github.com/daws-86s/eks-argocd.git
+
+        # Git branch/tag/commit
+        targetRevision: main
+
+        # Path inside repository
+        path: .
+
+        # --------------------------------------------------------
+        # HELM CONFIGURATION
+        # --------------------------------------------------------
+
+        helm:
+
+          # Helm release name
+          releaseName: catalogue
+
+          # Dynamic Helm values file
+          valueFiles:
+            - values-{{env}}.yaml
+
+      # --------------------------------------------------------
+      # DESTINATION CONFIGURATION
+      # --------------------------------------------------------
+
+      destination:
+
+        # Dynamic Kubernetes cluster server
+        server: {{ server }}
+
+        # Dynamic namespace
+        namespace: {{namespace}}
+
+      # --------------------------------------------------------
+      # SYNC POLICY
+      # --------------------------------------------------------
+
+      syncPolicy:
+
+        automated:
+
+          # Remove resources deleted from Git
+          prune: true
+
+          # Restore drifted resources automatically
+          selfHeal: true
